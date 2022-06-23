@@ -3,13 +3,19 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
-let city = {
-  name: "Madrid",
-  country: "Spain"
-};
+
+//compoent should be 
+function Hello(){
+  return (
+    <div>
+      <h1>Welcome to React!</h1>
+      <p>Let's build something cool.</p>
+    </div>
+  );
+}
 root.render(
   // React.createElement("div", {style:{color:"blue"}}, React.createElement("h1", null, "Hello!"))
-  <h1 id='heading' className='cool-text'>{city.name} is in {city.country}</h1>
+  <Hello/>
 );
 
 // If you want to start measuring performance in your app, pass a function

@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useReducer} from 'react';
+import React, {useState, useEffect, useReducer, useRef} from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 
@@ -223,23 +223,44 @@ function AppComponent2(){
   );
 }
 
+//Fetch data from api - using useEffect
+//displaying data from an api
 function GitHubUser({login}){
   const [data, setData] = useState(null);
+  const [error, setError] = useState(null);//handling error state for async api call
+  const [loading, setLoading] = useState(false);//handling load state for async api call
 
   useEffect(()=>{
+    setLoading(true);
     fetch(`https://api.github.com/users/${login}`)
-    .then(res => res.json())
-    .then(setData)//will call setData function with new data
-    .catch(console.error);
-  });
+    .then(response => response.json())
+    .then(setData)//will call setData function with new data , this is a short hand for .then(data => setData(data))
+    .then(() => setLoading(false))
+    .catch(setError);
+  }, []);//passing empty array as dependency to make sure the api is called once when the application first renders. prevents from doing multiple api calls
+
+  if(loading) return <h1>Loading...</h1>
+  if(error) return <pre>{JSON.stringify(error)}</pre>
+
 
   if(data){
     return (
-      <div>{JSON.stringify(data)}</div>
+      // <pre>{JSON.stringify(data, null, 2)}</pre>//nulll an 2 makes the data formatted on screen
+      <GitHubUserUiComponent name={data.name} location = {data.location} avatar={data.avatar}/>
     )
   }
 
-  return null;
+  return <h1>Data</h1>;
+}
+
+function GitHubUserUiComponent({name, location, avatar}){
+  return(
+    <div>
+      <h1>{name}</h1>
+      <p>{location}</p>
+      <img src={avatar} height={150} alt ={name} />
+    </div>
+  );
 }
 
 //useReducer hook - 
@@ -260,6 +281,102 @@ useEffect(()=> {
   );
 }
 
+//useRef hook - will help reach out an indiviual element and checkin what its value is
+//This is a uncontrolled component - create a 
+function FormUnControlledComponent(){
+  const txtTitle = useRef();//useref usage denotes an uncontrolled component, where we managing form elements outside of state
+  const hexColor = useRef();
+
+  console.log(txtTitle);
+
+  const submit = (e) => {
+    e.preventDefault();
+
+    const title = txtTitle.current.value;
+    const color = hexColor.current.value;
+    alert(`${title}, ${color}`);
+
+    txtTitle.current.value = "";
+    hexColor.current.value = "";
+  };
+
+return(
+  <form onSubmit={submit}>
+    <input ref={txtTitle} type="text" placeholder ="color title..."/>
+    <input ref={hexColor} type ="color" />
+    <button>ADD</button>
+  </form>
+);
+}
+
+function FormControlledComponent(){
+  const [title, setTitle] = useState("");
+  const [color, setColor] = useState("#000000");
+  
+  const submit = (e) => {
+    e.preventDefault();
+  
+    alert(`${title}, ${color}`);    
+    setTitle("");
+    setColor("#000000");
+  };
+
+return(
+  <form onSubmit={submit}>
+    <input value={title} 
+    onChange={(event)=>{
+      setTitle(event.target.value) 
+    }}
+    type="text" placeholder ="color title..."/>
+    <input value={color}
+    onChange={(event)=>{
+      setColor(event.target.value);
+    }}
+     type ="color" />
+    <button>ADD</button>
+  </form>
+);
+}
+
+//Custom hooks - always start with keywaord "use"
+//useHooks.com
+function useInput(initialValue){
+ const [value, setValue] = useState(initialValue);
+ return [//Can implement anyway we want
+  {
+    value, 
+    onChange: e => setValue(e.target.value)
+  },
+  () => setValue(initialValue)//clean up value
+ ]
+}
+
+//react-hook-form.com
+//formik.org
+function FormControlledComponentWithCustomHook(){
+  const [titleProps, resetTitle] = useInput("");
+  const [colorProps, resetColor] = useState("#000000");
+  
+  const submit = (e) => {
+    e.preventDefault();
+  
+    alert(`${titleProps.value}, ${colorProps.value}`);    
+    resetTitle();
+    resetColor();
+  };
+
+return(
+  <form onSubmit={submit}>
+    <input 
+    {...titleProps}//pushing all of the values in titleProps, spreading all of the properties i.e. instead of writing value= and onchanged= in this input field, we are embedding these properties from hook. use sparinglig this implemeantation,  We can use here as the titleprops has few properties needed
+    
+    type="text" placeholder ="color title..."/>
+    <input {...colorProps}
+     type ="color" />
+    <button>ADD</button>
+  </form>
+);
+}
 root.render(
   // React.createElement("div", {style:{color:"blue"}}, React.createElement("h1", null, "Hello!"))
   <div>
@@ -275,6 +392,8 @@ root.render(
   <AppComponent2/>
   {/* <GitHubUser login="moonhighway"/> */}
   <CheckBox2/>
+  <FormUnControlledComponent/>
+  <FormControlledComponent/>
   </div>
 );
 
